@@ -2,9 +2,9 @@ import copy
 import hashlib
 import json
 import pathlib
-from pathlib import Path
 from collections.abc import Mapping, MutableMapping
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any, Dict, Tuple, Union
 
 import yaml
@@ -14,28 +14,30 @@ Key = Union[str, NormalizedKey]
 
 import functools
 
+
 def autoload(path: Union[str, Path]):
     path = Path(path)
-    with path.open('r') as f:
+    with path.open("r") as f:
         extension = path.suffix.lower()
-        if extension == '.json':
+        if extension == ".json":
             return json.load(f)
-        if extension == '.jsonl':
+        if extension == ".jsonl":
             return [json.loads(l) for l in f.readlines()]
-        if extension in ('.yml', '.yaml'):
+        if extension in (".yml", ".yaml"):
             return yaml.safe_load(f)
         raise ValueError(f"Unsupported extension {extension}")
 
+
 def autosave(data, path: Union[str, Path]):
     path = Path(path)
-    with path.open('w') as f:
+    with path.open("w") as f:
         extension = path.suffix.lower()
-        if extension == '.json':
+        if extension == ".json":
             json.dump(data, f)
-        if extension == '.jsonl':
+        if extension == ".jsonl":
             for line in data:
                 print(json.dumps(line), file=f)
-        if extension in ('.yml', '.yaml'):
+        if extension in (".yml", ".yaml"):
             yaml.safe_dump(data)
         raise ValueError(f"Unsupported extension {extension}")
 
@@ -98,6 +100,7 @@ def deepupdate(original, update) -> Dict[Key, Any]:
         else:
             original[k] = v
     return original
+
 
 # def set_var(config, key, value):
 #     parts = key.split('.')
@@ -388,19 +391,20 @@ class Config(HDict):
     def missing_keys(self):
         missing_keys = []
 
-        def search_missing(val, prefix=''):
-            if isinstance(val, str) and val == '?':
+        def search_missing(val, prefix=""):
+            if isinstance(val, str) and val == "?":
                 missing_keys.append(prefix[1:])
             elif isinstance(val, dict):
                 for k, v in val.items():
-                    search_missing(v, f'{prefix}.{k}')
+                    search_missing(v, f"{prefix}.{k}")
             elif isinstance(val, list):
                 for i, v in enumerate(val):
-                    search_missing(v, f'{prefix}.{i}')
+                    search_missing(v, f"{prefix}.{i}")
 
         search_missing(self.to_dict())
 
         return missing_keys
+
 
 class ImmutableConfig(HDict):
     def __hash__(self):
@@ -521,7 +525,7 @@ class FHDict(HDict):
 
 
 # def check_missing(config):
-    
+
 
 #     if len(missing_keys) > 0:
 #         raise ValueError(f"Missing keys {missing_keys}")
