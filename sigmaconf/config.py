@@ -99,6 +99,25 @@ def deepupdate(original, update) -> Dict[Key, Any]:
             original[k] = v
     return original
 
+# def set_var(config, key, value):
+#     parts = key.split('.')
+#     prev = config
+#     for part in parts:
+#         prev = config
+#         if isinstance(config, dict):
+#             config = config.setdefault(part, {})
+#         elif isinstance(config, list):
+#             config = config[int(part)]
+#     if isinstance(prev, dict):
+#         prev[parts[-1]] = value
+#     elif isinstance(prev, list):
+#         prev[int(parts[-1])] = value
+
+# def deepupdate(original, update):
+#     for k, v in flatten(update, sep='.').items():
+#         set_var(original, k, v)
+#     return original
+
 
 def unflatten(flat_dict, sep=None):
     nested_dict = {}
@@ -343,6 +362,15 @@ class Config(HDict):
 
     def __ror__(self, other):
         return self.update(other)
+
+    def missing_keys(self):
+       missing_keys = []
+
+       for key, value in self.flatten().items():
+           if value == "?":
+               missing_keys.append(key)
+
+       return missing_keys
 
 class ImmutableConfig(HDict):
     def __hash__(self):
