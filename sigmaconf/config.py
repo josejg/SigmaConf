@@ -161,6 +161,7 @@ def set_nested(nested_dict, key, value, sep=None):
         if isinstance(d, dict):
             d = d.setdefault(parent, {})
         elif isinstance(d, list):
+            parent = int(parent)
             d = d[parent]
         # if intermediate key has non-dict value, we overwrite
         else:
@@ -358,19 +359,48 @@ class Config(HDict):
         return super().update(other)
 
     def __or__(self, other):
+        # newobj through update
         return self.update(other)
 
     def __ror__(self, other):
+        # newobj through update
         return self.update(other)
 
+    def __sub__(self, to_remove: Union[str, list]):
+        # implicit newobj through pops
+        cfg = self
+        if isinstance(to_remove, str):
+            cfg = cfg.pop(to_remove)
+        if isinstance(to_remove, list):
+            for k in to_remove:
+                cfg = cfg.pop(k)
+        if isinstance(to_remove, (dict, Config)):
+            for k in flatten(to_remove):
+                cfg = cfg.pop(k)
+        return cfg
+
+    def __add__(self, to_add: dict):
+        cfg = self
+        for k, v in flatten(dict(to_add)).items():
+            cfg = cfg.set(k, v)
+        return cfg
+
     def missing_keys(self):
-       missing_keys = []
+        missing_keys = []
 
-       for key, value in self.flatten().items():
-           if value == "?":
-               missing_keys.append(key)
+        def search_missing(val, prefix=''):
+            if isinstance(val, str) and val == '?':
+                missing_keys.append(prefix[1:])
+            elif isinstance(val, dict):
+                for k, v in val.items():
+                    search_missing(v, f'{prefix}.{k}')
+            elif isinstance(val, list):
+                for i, v in enumerate(val):
+                    search_missing(v, f'{prefix}.{i}')
 
-       return missing_keys
+        search_missing(self.to_dict())
+
+        return missing_keys
 
 class ImmutableConfig(HDict):
     def __hash__(self):
@@ -490,16 +520,11 @@ class FHDict(HDict):
             return super().to_dict()
 
 
-def check_missing(config):
-    flat_cfg = Config(config).flatten()
-    missing_keys = []
+# def check_missing(config):
+    
 
-    for key, value in flat_cfg.items():
-        if value == "?":
-            missing_keys.append(key)
-
-    if len(missing_keys) > 0:
-        raise ValueError(f"Missing keys {missing_keys}")
+#     if len(missing_keys) > 0:
+#         raise ValueError(f"Missing keys {missing_keys}")
 
 
 def configdiff(*cfgs):
