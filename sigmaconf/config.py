@@ -308,7 +308,7 @@ class HDict(MutableMapping):
         return cls(autoload(path))
 
     def as_yaml(self) -> str:
-        return yaml.safe_dump(self._data)
+        return yaml.safe_dump(self.to_dict())
 
     def to_dict(self) -> dict:
         return copy.deepcopy(self._data)
