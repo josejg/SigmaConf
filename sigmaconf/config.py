@@ -9,10 +9,10 @@ from typing import Any, Dict, Tuple, Union
 
 import yaml
 
+import functools
+
 NormalizedKey = Tuple[Union[str, int], ...]
 Key = Union[str, NormalizedKey]
-
-import functools
 
 
 def autoload(path: Union[str, Path]):
@@ -22,7 +22,7 @@ def autoload(path: Union[str, Path]):
         if extension == ".json":
             return json.load(f)
         if extension == ".jsonl":
-            return [json.loads(l) for l in f.readlines()]
+            return [json.loads(line) for line in f.readlines()]
         if extension in (".yml", ".yaml"):
             return yaml.safe_load(f)
         raise ValueError(f"Unsupported extension {extension}")
@@ -404,6 +404,13 @@ class Config(HDict):
         search_missing(self.to_dict())
 
         return missing_keys
+
+    def to_dict(self, warn_missing: bool = False) -> dict:
+        if warn_missing:
+            missing_keys = self.missing_keys()
+            if len(missing_keys) > 0:
+                raise ValueError(f"Missing keys: {missing_keys}")
+        return super().to_dict()
 
 
 class ImmutableConfig(HDict):

@@ -1,2 +1,3 @@
 from .config import Config, configdiff
-from .util import *
+
+__all__ = ["Config", "configdiff"]
